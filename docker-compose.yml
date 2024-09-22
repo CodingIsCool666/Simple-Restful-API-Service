@@ -1,0 +1,25 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8888
+    volumes:
+      - .:/code
+    ports:
+      - "8888:8888"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
