@@ -1,11 +1,18 @@
-FROM python:3.10-slim
+# Use Python as the base image
+FROM python:3.11
 
-WORKDIR /code
+# Set the working directory
+WORKDIR /app
 
-COPY requirements.txt .
-
+# Copy the requirements and the application code
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the application code
 COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8888"]
+# Expose the port on which the app will run
+EXPOSE 8888
+
+# Set the entrypoint to run the application
+CMD ["python", "app/app.py"]
