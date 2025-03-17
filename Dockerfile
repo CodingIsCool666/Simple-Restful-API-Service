@@ -2,7 +2,7 @@
 FROM python:3.11
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /
 
 # Copy the requirements and the application code
 COPY requirements.txt requirements.txt
@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8888
 
 # Set the entrypoint to run the application
-CMD ["python", "app/app.py"]
+CMD ["python", "app.py"]

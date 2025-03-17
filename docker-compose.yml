@@ -6,28 +6,42 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    # volumes:
+    #   - postgres_data:/var/lib/postgresql/data
     restart: always 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       retries: 5
+    networks:
+      - app-network
 
   app:
     build:
       context: .
     container_name: flask_app
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/mydatabase"
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_PASS: postgres
+      DATABASE_USER: postgres
+      DATABASE_NAME: postgres
     ports:
       - "8888:8888"
     depends_on:
       postgres:
         condition: service_healthy
     restart: always
+    networks:
+      - app-network
 
-volumes:
-  postgres_data:
+networks:
+  app-network:
+    driver: bridge
+
+
+# volumes:
+#   postgres_data:

@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 from dotenv import load_dotenv
+from src.models.student import db, Student
 
 app = Flask(__name__)
 
@@ -9,28 +10,15 @@ app = Flask(__name__)
 load_dotenv()
 DATABASE_HOST=os.getenv('DATABASE_HOST')
 DATABASE_PORT=os.getenv('DATABASE_PORT')
-DATABASE_URL = f'{DATABASE_HOST}:{DATABASE_PORT}'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5432/postgres'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+DATABASE_PASS=os.getenv('DATABASE_PASS')
+DATABASE_USER=os.getenv('DATABASE_USER')
+DATABASE_NAME=os.getenv('DATABASE_NAME')
 
-# Initialize the SQLAlchemy ORM
-db = SQLAlchemy(app)
+DATABASE_URL = f'postgresql://{DATABASE_USER}:{DATABASE_PASS}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}'
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Define the Student model
-class Student(db.Model):
-    __tablename__ = 'students'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    age = db.Column(db.Integer, nullable=False)
-    major = db.Column(db.String(100), nullable=False)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'age': self.age,
-            'major': self.major
-        }
+db.init_app(app)  # 在此綁定 app
 
 # Endpoint to get all students
 @app.route('/api/student', methods=['GET'])
@@ -64,6 +52,28 @@ def add_student():
     except Exception as e:
         return str(e), 500
 
+@app.route('/api/student/<int:id>', methods=['DELETE'])
+def delete_student(id):
+    student = Student.query.get(id)
+    if student:
+        db.session.delete(student)
+        db.session.commit()
+        return "Student deleted successfully", 200
+    return "Student not found", 404
+
+@app.route('/api/student/<int:id>', methods=['PUT'])
+def update_student(id):
+    student = Student.query.get(id)
+    if not student:
+        return "Student not found", 404
+    
+    student_data = request.get_json()
+    student.name = student_data.get('name', student.name)
+    student.age = student_data.get('age', student.age)
+    student.major = student_data.get('major', student.major)
+    db.session.commit()
+    return "Student updated successfully", 200
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -80,3 +90,4 @@ if __name__ == '__main__':
             db.session.commit()
 
     app.run(host='0.0.0.0', port=8888)
+
