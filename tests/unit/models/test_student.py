@@ -1,5 +1,4 @@
-import pytest
-from src.models.student import Student
+from orm.models.student import Student
 
 
 def test_student_to_dict():
