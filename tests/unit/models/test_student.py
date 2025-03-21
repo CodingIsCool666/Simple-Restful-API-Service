@@ -1,4 +1,4 @@
-from orm.models.student import Student
+from orm.models import Student
 
 
 def test_student_to_dict():
