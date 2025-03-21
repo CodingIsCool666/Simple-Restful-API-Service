@@ -1,10 +1,13 @@
-from orm.models.base import Base
-
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import (
     Column,
     Integer,
     String,
 )
+
+class Base(DeclarativeBase):
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class Student(Base):
     __tablename__ = 'student'
