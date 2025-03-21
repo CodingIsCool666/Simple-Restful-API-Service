@@ -30,7 +30,6 @@ def add_student():
     session = scoped_session(Session)
     try:
         student_data = request.get_json()
-        print("Received data:", student_data)
         name = student_data.get('name')
         age = student_data.get('age')
         major = student_data.get('major')
@@ -46,35 +45,52 @@ def add_student():
     try:
         session.commit()
     except Exception as e:
-        session.rollback()  # Ensure rollback in case of failure
+        session.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        session.remove()  # Always close the session
+        session.remove()
 
     return jsonify({"message": "Student added successfully"}), 201
 
 
 @app.route('/api/student/<int:id>', methods=['DELETE'])
 def delete_student(id):
-    student = Student.query.get(id)
-    if student:
-        db.session.delete(student)
-        db.session.commit()
-        return "Student deleted successfully", 200
-    return "Student not found", 404
+    session = scoped_session(Session)
+    try:
+        student = session.get(Student, id)
+        if student:
+            session.delete(student)
+            session.commit()
+            return jsonify({"message": "Student deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Student not found"}), 404
+    except Exception as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.remove()
 
 @app.route('/api/student/<int:id>', methods=['PUT'])
 def update_student(id):
-    student = Student.query.get(id)
-    if not student:
-        return "Student not found", 404
-    
-    student_data = request.get_json()
-    student.name = student_data.get('name', student.name)
-    student.age = student_data.get('age', student.age)
-    student.major = student_data.get('major', student.major)
-    db.session.commit()
-    return "Student updated successfully", 200
+    session = scoped_session(Session)
+    try:
+        student = session.get(Student, id)
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+        student_data = request.get_json()
+        student.name = student_data.get('name', student.name)
+        student.age = student_data.get('age', student.age)
+        student.major = student_data.get('major', student.major)
+
+        session.commit()
+        return jsonify({"message": "Student updated successfully"}), 200
+    except Exception as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.remove()
+
 
 if __name__ == '__main__':
     init_db()
