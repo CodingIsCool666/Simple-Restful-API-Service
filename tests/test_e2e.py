@@ -1,7 +1,7 @@
 import requests
 import pytest
 
-BASE_URL = "http://127.0.0.1:8888/api/student"
+BASE_URL = "http://127.0.0.1:8787/api/student"
 
 @pytest.fixture(scope="function", autouse=True)
 def reset_db():
@@ -16,14 +16,14 @@ def test_get_empty_students():
     """Test GET when the database is empty."""
     response = requests.get(BASE_URL)
     assert response.status_code == 404
-    assert response.text == "No students found"
+    assert response.json() == {'error': 'No students found'}
 
 def test_add_student():
     """Test adding a student using POST."""
     data = {"name": "John Doe", "age": 25, "major": "Physics"}
     response = requests.post(BASE_URL, json=data)
     assert response.status_code == 201
-    assert response.text == "Student added successfully"
+    assert response.json() == {"message": "Student added successfully"}
 
 def test_get_students():
     """Test GET after adding students."""
@@ -42,7 +42,7 @@ def test_delete_student():
 
     delete_response = requests.delete(f"{BASE_URL}/{student_id}")
     assert delete_response.status_code == 200
-    assert delete_response.text == "Student deleted successfully"
+    assert delete_response.json() == {"message": "Student deleted successfully"}
 
     # Verify deletion
     get_response = requests.get(BASE_URL)
@@ -57,8 +57,7 @@ def test_update_student():
     updated_data = {"name": "Jane Doe", "age": 30, "major": "Math"}
     put_response = requests.put(f"{BASE_URL}/{student_id}", json=updated_data)
     assert put_response.status_code == 200
-    assert put_response.text == "Student updated successfully"
-
+    assert put_response.json() == {"message": "Student updated successfully"}
     # Verify update
     get_response = requests.get(BASE_URL)
     student = get_response.json()[0]
