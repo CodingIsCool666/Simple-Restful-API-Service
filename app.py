@@ -6,23 +6,28 @@ from orm.database import Session, init_db
 
 app = Flask(__name__)
 
-# Endpoint to get all students
 @app.route('/api/student', methods=['GET'])
 def get_student():
     session = scoped_session(Session)
     try:
-        students = session.query(Student).all()
-        if students:
-            student_list = [student.to_dict() for student in students]
-            return jsonify(student_list), 200
+        student_id = request.args.get("id", type=int)
+
+        if student_id:
+            student = session.get(Student, student_id)
+            if not student:
+                return jsonify({"error": f"Student with ID {student_id} was not found"}), 404
+            return jsonify(student.to_dict()), 200
         else:
-            return "No students found", 404
+            students = session.query(Student).all()
+            if not students:
+                return jsonify({"error": "No students found"}), 404
+            return jsonify([student.to_dict() for student in students]), 200
     except Exception as e:
         session.rollback()
-        return str(e), 500
+        return jsonify({"error": str(e)}), 500
     finally:
-        session.remove() 
-        session.close()
+        session.remove()
+
 
 # Endpoint to add a student
 @app.route('/api/student', methods=['POST'])
