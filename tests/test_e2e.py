@@ -1,16 +1,47 @@
 import requests
 import pytest
+from dotenv import load_dotenv
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from orm.models import Student
+
 
 BASE_URL = "http://127.0.0.1:8787/api/student"
+
+load_dotenv()
+DATABASE_HOST=os.getenv('DATABASE_HOST', 'postgres')
+DATABASE_PORT=os.getenv('DATABASE_PORT', '5432')
+DATABASE_PASS=os.getenv('DATABASE_PASS', 'postgres')
+DATABASE_USER=os.getenv('DATABASE_USER', 'postgres')
+DATABASE_NAME=os.getenv('DATABASE_NAME', 'postgres')
+
+# 建立連線 URL
+DATABASE_URL = f'postgresql://{DATABASE_USER}:{DATABASE_PASS}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}'
+
+# 創建資料庫引擎
+engine = create_engine(DATABASE_URL)
+
+# 創建 session
+Session = sessionmaker(bind=engine)
+session = Session()
+
 
 @pytest.fixture(scope="function", autouse=True)
 def reset_db():
     """Reset the database before each test by deleting all students."""
-    response = requests.get(BASE_URL)
-    if response.status_code == 200:
-        students = response.json()
-        for student in students:
-            requests.delete(f"{BASE_URL}/{student['id']}")
+    try:
+        # 直接刪除所有學生資料
+        deleted = session.query(Student).delete()
+        session.commit()
+        print(f"{deleted} student(s) deleted successfully!")
+
+    except Exception as e:
+        session.rollback()
+        print(f"An error occurred while deleting students: {e}")
+    finally:
+        session.close()
 
 def test_get_empty_students():
     """Test GET when the database is empty."""
