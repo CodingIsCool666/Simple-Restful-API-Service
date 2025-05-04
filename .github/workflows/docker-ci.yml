@@ -2,6 +2,7 @@ name: Build and Push Docker Image
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     branches: [ main ]
   push:
     branches: [ main ]
@@ -26,9 +27,9 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/restful-api:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-api-server:latest .
 
       - name: Push Docker image (only on push to main)
         if: github.event_name == 'push'
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/restful-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/my-api-server:latest
